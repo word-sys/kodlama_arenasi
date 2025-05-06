@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/theme/material.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+    <title>Kodlama Arenası - {% block title %}Başlık{% endblock %}</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Kodlama Arenası</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">Ana Sayfa</a>
+                    </li>
+                    {% if 'user_id' in session %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Panelim</a>
+                        </li>
+                        <li class="nav-item">
+                             <a class="nav-link {% if request.endpoint == 'leaderboard' %}active{% endif %}" href="{{ url_for('leaderboard') }}">Liderlik Tablosu</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="user-username-display">{{ session['username'] }}</span>
+                                (
+                                <span id="user-score-display">?</span> Puan |
+                                <img src="{{ url_for('static', filename='img/leagues/' + session.get('league', 'Bronz').lower() + '.png') }}"
+                                     alt="{{ session.get('league', 'Bronz') }} Ligi"
+                                     class="league-badge"
+                                     id="user-league-badge-nav">
+                                <span id="user-league-display" class="league-text-{{ session.get('league', 'Bronz') }}">{{ session.get('league', 'Bronz') }}</span>
+                                )
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('my_achievements') }}">Başarımlarım</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Çıkış Yap</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Giriş Yap</a>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'register' %}active{% endif %}" href="{{ url_for('register') }}">Kayıt Ol</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% set alert_class = 'alert-' + category if category in ['success', 'warning', 'danger', 'info'] else 'alert-info' %}
+                    {# Başarım mesajları için özel class #}
+                    {% if 'achievement-flash' in category %}
+                        {% set alert_class = alert_class + ' achievement-flash' %}
+                    {% endif %}
+                    <div class="alert {{ alert_class }} alert-dismissible fade show" role="alert">
+                        {{ message | safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="container text-center mt-5 mb-3 text-muted">
+        <p>© {{ now.year }} Kodlama Arenası</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.14/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        function updateUserNavInfo(score, league) {
+            const scoreDisplay = document.getElementById('user-score-display');
+            const leagueDisplay = document.getElementById('user-league-display');
+            const leagueBadge = document.getElementById('user-league-badge-nav');
+
+            if (scoreDisplay && score !== undefined) {
+                scoreDisplay.textContent = score;
+            }
+            if (league) {
+                if (leagueDisplay) {
+                    leagueDisplay.textContent = league;
+                    leagueDisplay.className = 'league-text-' + league;
+                }
+                if (leagueBadge) {
+                     const badgeFilename = 'img/leagues/' + league.toLowerCase() + '.png';
+                     leagueBadge.src = '{{ url_for('static', filename='') }}' + badgeFilename;
+                     leagueBadge.alt = league + ' Ligi';
+                }
+            }
+        }
+        {% if 'user_id' in session %}
+            fetch("{{ url_for('get_user_info') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        updateUserNavInfo(data.score, data.league);
+                    }
+                })
+                .catch(error => console.error('Kullanıcı bilgisi alınamadı:', error));
+        {% endif %}
+    </script>
+</body>
+</html>

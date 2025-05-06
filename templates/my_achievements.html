@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+{% block title %}Başarımlarım{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .achievement-card {
+            border: 1px solid #dee2e6;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+        .achievement-card.unlocked {
+            opacity: 1.0;
+            border-color: #198754;
+            background-color: #e9f7ef;
+            box-shadow: 0 0 5px rgba(25, 135, 84, 0.3);
+        }
+        .achievement-icon {
+            font-size: 2.5rem;
+            color: #adb5bd;
+            min-width: 50px;
+            transition: color 0.3s ease;
+        }
+        .achievement-card.unlocked .achievement-icon {
+            color: #198754;
+        }
+        .achievement-details {
+            margin-left: 1rem;
+        }
+        .achievement-flash {
+            border-left: 5px solid #ffc107;
+        }
+        .unlocked-check {
+            color: #198754;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+         .achievement-card.unlocked .unlocked-check {
+             opacity: 1;
+         }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Başarımlarım</h2>
+    <p class="lead">Toplam <strong>{{ earned_ids | length }} / {{ all_achievements | length }}</strong> başarım kazandın.</p>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for achievement in all_achievements %}
+            {% set is_unlocked = achievement.id in earned_ids %}
+            <div class="col">
+                <div class="card h-100 achievement-card {% if is_unlocked %}unlocked{% endif %}">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="achievement-icon text-center">
+                            {% if achievement.icon %}
+                                <i class="{{ achievement.icon }}"></i>
+                            {% else %}
+                                <i class="fas fa-question-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="achievement-details flex-grow-1">
+                            <h5 class="card-title mb-1 {% if not is_unlocked %}text-muted{% endif %}">{{ achievement.name }}</h5>
+                            <p class="card-text small mb-1 {% if not is_unlocked %}text-muted{% endif %}">{{ achievement.description }}</p>
+                            {% if achievement.points_reward > 0 %}
+                                <span class="badge {% if is_unlocked %}bg-success{% else %}bg-secondary{% endif %}">+{{ achievement.points_reward }} Puan</span>
+                            {% endif %}
+                        </div>
+                        <div class="unlocked-check ms-2">
+                            {% if is_unlocked %}
+                                <i class="fas fa-check-circle"></i>
+                            {% endif %}
+                         </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

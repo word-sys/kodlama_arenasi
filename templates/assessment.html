@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+{% block title %}{{ level.title }}{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .CodeMirror {
+            border: 1px solid #dee2e6; /* Bootstrap border rengi */
+            height: auto !important;
+            min-height: 300px; /* Yeterli minimum yükseklik */
+            font-size: 14px !important;
+        }
+        /* assessment-instructions class'ına artık gerek yok, normal paragraf kullanacağız */
+        .task-list ol { margin-left: 20px; list-style-type: decimal; }
+        .task-list li { margin-bottom: 10px; }
+        /* Başarım flash mesajı için stil */
+        .achievement-flash { border-left: 5px solid #ffc107; }
+        /* Deneme sayfası flash mesajı için stil (opsiyonel) */
+        .assessment-flash { border-left: 5px solid #0dcaf0; }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <h2 class="mb-3">{{ level.title }}</h2>
+
+    {# Açıklamayı normal metin olarak gösterelim #}
+    <div class="level-description mb-4 task-list"> {# Görev listesi için stil #}
+        {{ level.description | safe }} {# HTML listesini render etmek için safe gerekli #}
+    </div>
+
+    {# Kod Editörü Alanı - Yapı doğru görünüyor #}
+    <div class="level-editor-area mb-3">
+        <h5>Kod Alanı:</h5>
+        <div class="border rounded"> {# CodeMirror için çerçeve #}
+            <textarea id="code-editor" name="user_code">{{ level.initial_code or '' }}</textarea>
+        </div>
+    </div>
+
+    {# Geri Bildirim Alanı #}
+    <div id="feedback-area" class="mb-3"></div>
+
+    {# Aksiyon Butonları #}
+    <div class="level-actions mb-3">
+        <button type="button" class="btn btn-success" id="submit-button" data-level-id="{{ level.id }}">
+             <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="display: none;"></span>
+            Denemeyi Tamamla ve Gönder
+        </button>
+        {% if level.hints %}
+        <button type="button" class="btn btn-outline-secondary ms-2" id="hint-button">İpucu Göster</button>
+        {% endif %}
+    </div>
+
+    {# İpucu Alanı #}
+    {% if level.hints %}
+    <div id="hint-area" class="alert alert-light border" style="display: none;">
+        <strong>İpucu:</strong><br>
+        {{ level.hints | replace('\n', '<br>') | safe }}
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+    {# JavaScript kısmı aynı kalabilir, sorun JS'de değil gibi duruyor #}
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+        lineNumbers: true,
+        mode: "htmlmixed",
+        theme: "material",
+        matchBrackets: true,
+        autoCloseBrackets: true
+    });
+    editor.on('change', function() { editor.save(); });
+
+    const hintButton = document.getElementById('hint-button');
+    const hintArea = document.getElementById('hint-area');
+    if (hintButton && hintArea) {
+         hintButton.addEventListener('click', function() {
+            if (hintArea.style.display === 'none') {
+                hintArea.style.display = 'block';
+                hintButton.textContent = 'İpucunu Gizle';
+            } else {
+                hintArea.style.display = 'none';
+                hintButton.textContent = 'İpucu Göster';
+            }
+        });
+    }
+
+    const submitButton = document.getElementById('submit-button');
+    const feedbackArea = document.getElementById('feedback-area');
+    const submitSpinner = submitButton ? submitButton.querySelector('.spinner-border') : null;
+
+    if (submitButton && feedbackArea && submitSpinner) {
+        submitButton.addEventListener('click', function() {
+            const userCode = editor.getValue();
+            const levelId = this.dataset.levelId;
+            const submitUrl = `/submit_answer/${levelId}`;
+
+            submitButton.disabled = true;
+            submitSpinner.style.display = 'inline-block';
+            feedbackArea.innerHTML = '';
+
+            fetch(submitUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', },
+                body: JSON.stringify({ code: userCode })
+            })
+            .then(response => {
+                 if (!response.ok) {
+                      return response.json().then(errData => {
+                        throw new Error(errData.message || `Sunucu hatası: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`Sunucu hatası: ${response.status}`);
+                    });
+                 }
+                 return response.json();
+             })
+            .then(data => {
+                // Flash mesajı backend'den geliyor ve yönlendirme sonrası görünecek.
+                // Bu yüzden burada sadece yönlendirme öncesi kısa bir mesaj gösterebiliriz.
+                if (data.success && data.assessment_completed) {
+                    //feedbackArea.innerHTML = `<div class="alert alert-success">${data.message}</div>`; // Bu mesaj yerine flash mesaj gösterilecek
+                    feedbackArea.innerHTML = "<p class='alert alert-success'>Değerlendirme tamamlandı! Yönlendiriliyorsun...</p>";
+                    setTimeout(function() {
+                        window.location.href = "{{ url_for('dashboard') }}";
+                    }, 2000); // Yönlendirme süresini biraz kısalttım
+                } else {
+                    // Değerlendirme başarısızsa veya beklenmedik bir durumsa
+                    let feedbackClass = data.success ? 'alert-info' : 'alert-danger'; // data.success muhtemelen false olacak
+                     feedbackArea.innerHTML = `<div class="alert ${feedbackClass} alert-dismissible fade show" role="alert">
+                                                ${data.message || 'Bir sorun oluştu.'}
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                               </div>`;
+                    submitButton.disabled = false;
+                    submitSpinner.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Gönderme hatası:', error);
+                feedbackArea.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                             Bir hata oluştu: ${error.message}
+                                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                           </div>`;
+                submitButton.disabled = false;
+                submitSpinner.style.display = 'none';
+            });
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+body {
+    font-family: sans-serif;
+    line-height: 1.6;
+}
+
+.league-badge {
+    height: 20px;
+    width: auto;
+    vertical-align: middle;
+    margin-right: 5px;
+}
+.leaderboard-table .league-badge {
+    height: 24px;
+}
+
+.league-text-Bronz { color: #cd7f32; }
+.league-text-Gümüş { color: #6c757d; }
+.league-text-Altın { color: #ffc107; }
+.league-text-Platin { color: #6f42c1; }
+
+.CodeMirror {
+    height: auto !important;
+    min-height: 250px;
+    font-size: 14px !important;
+}
+
+.achievement-flash {
+    border-left: 5px solid #ffc107;
+}
+
+.achievement-card {
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+.achievement-card.unlocked {
+    opacity: 1.0;
+    border-color: #198754;
+    background-color: #e9f7ef;
+    box-shadow: 0 0 5px rgba(25, 135, 84, 0.3);
+}
+.achievement-icon {
+    font-size: 2.5rem;
+    color: #adb5bd;
+    min-width: 50px;
+    transition: color 0.3s ease;
+}
+.achievement-card.unlocked .achievement-icon {
+    color: #198754;
+}
+.achievement-details {
+    margin-left: 1rem;
+}
+.unlocked-check {
+    color: #198754;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+ .achievement-card.unlocked .unlocked-check {
+     opacity: 1;
+ }

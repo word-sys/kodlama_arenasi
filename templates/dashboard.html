@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Panelim{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Panelim</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Sıradaki Görev</h5>
+                     {% if next_level_id %}
+                        <p>Bir sonraki mücadelene hazır mısın?</p>
+                        <a href="{{ url_for('view_level', level_id=next_level_id) }}" class="btn btn-success">Sıradaki Seviyeye Başla</a>
+                    {% elif user.initial_assessment_complete %}
+                        <p class="text-success fw-bold">Tebrikler, tüm mevcut seviyeleri tamamladınız!</p>
+                    {% else %}
+                         <p>Önce seviye belirleme denemesini tamamlamalısın.</p>
+                         <a href="{{ url_for('assessment') }}" class="btn btn-warning">Denemeyi Tamamla</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                 <div class="card-header">Profil Bilgilerin</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Kullanıcı Adı:</strong> {{ user.username }}</li>
+                    <li class="list-group-item"><strong>Puan:</strong> <span id="user-score-display-dash">{{ user.score }}</span></li>
+                    <li class="list-group-item">
+                        <strong>Lig:</strong>
+                        <img src="{{ url_for('static', filename='img/leagues/' + user.league.lower() + '.png') }}"
+                             alt="{{ user.league }} Ligi"
+                             class="league-badge"
+                             id="user-league-badge-dash">
+                        <span id="user-league-display-dash" class="league-text-{{ user.league }}">{{ user.league }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Günlük Seri:</strong>
+                        {% if user.streak_count > 0 %}
+                            🔥 {{ user.streak_count }} gün
+                        {% else %}
+                            -
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

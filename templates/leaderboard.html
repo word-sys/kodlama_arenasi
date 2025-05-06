@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block title %}Liderlik Tablosu{% endblock %}
+
+{% block extra_head %}
+    <style>
+        .league-badge {
+            height: 24px;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .league-text-Bronz { color: #cd7f32; }
+        .league-text-Gümüş { color: #6c757d; }
+        .league-text-Altın { color: #ffc107; }
+        .league-text-Platin { color: #6f42c1; }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Liderlik Tablosu</h2>
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Kullanıcı Adı</th>
+                    <th>Puan</th>
+                    <th>Lig</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr {% if 'user_id' in session and user.id == session['user_id'] %}class="table-success"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.score }}</td>
+                    <td>
+                        <img src="{{ url_for('static', filename='img/leagues/' + user.league.lower() + '.png') }}"
+                             alt="{{ user.league }} Ligi"
+                             class="league-badge">
+                        <span class="league-text-{{ user.league }} fw-bold">{{ user.league }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>Henüz sıralamada kimse yok.</p>
+    {% endif %}
+{% endblock %}

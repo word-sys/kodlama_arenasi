@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+    <div class="p-5 mb-4 bg-light rounded-3">
+      <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Kodlama Arenası'na Hoş Geldin!</h1>
+        <p class="col-md-8 fs-4">HTML, CSS ve JavaScript becerilerini eğlenerek geliştir. Seviyeleri tamamla, puanları topla ve liderlik tablosunda yüksel!</p>
+        {% if 'user_id' not in session %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2" type="button">Hemen Kayıt Ol</a>
+        <a href="{{ url_for('login') }}" class="btn btn-secondary btn-lg" type="button">Giriş Yap</a>
+        {% else %}
+         <a href="{{ url_for('dashboard') }}" class="btn btn-success btn-lg" type="button">Panelime Git</a>
+        {% endif %}
+      </div>
+    </div>
+{% endblock %}
